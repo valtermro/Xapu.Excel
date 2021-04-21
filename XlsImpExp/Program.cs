@@ -8,10 +8,10 @@ using Xls.Montagem;
 
 namespace XlsImpExp
 {
-    class LinhaLeituraXls
+    class DadoXls
     {
-        public int Numero { get; set; }
-        public DateTime Data { get; set; }
+        public int? Numero { get; set; }
+        public DateTime? Data { get; set; }
         public decimal? Valor { get; set; }
         public string Obs { get; set; }
         public bool? Ativo { get; set; }
@@ -41,16 +41,61 @@ namespace XlsImpExp
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
+            //Criar();
             Ler();
+        }
+
+        private static void Criar()
+        {
+            var config = new ConfigMontagemXls<DadoXls>
+            {
+                Nome = "Teste",
+                Colunas = ConfigColunas(),
+                Dados = new[]
+                {
+                    new DadoXls
+                    {
+                        Numero = 42,
+                        Data = DateTime.Today,
+                        Ativo = true,
+                        Valor = 99.5687m,
+                        Obs = "Teste"
+                    },
+                    new DadoXls
+                    {
+                        Numero = null,
+                        Data = null,
+                        Ativo = null,
+                        Valor = null,
+                        Obs = null
+                    },
+                    new DadoXls
+                    {
+                        Numero = null,
+                        Data = DateTime.Now,
+                        Ativo = null,
+                        Valor = null,
+                        Obs = null
+                    }
+                }
+            };
+
+            var montador = new MontadorXls();
+            var resultado = montador.Montar(config);
+
+            File.WriteAllBytes($"D:\\Downloads\\{resultado.FileName}", resultado.Bytes);
+
+            //var stream = new MemoryStream(resultado.Bytes);
+            //File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "test.xlsx");
         }
 
         private static void Ler()
         {
-            using var reader = new StreamReader("D:\\Labs\\Excel\\Importacao.xlsx");
+            using var reader = new StreamReader("D:\\Downloads\\Teste.xlsx");
 
-            var config = new ConfigLeituraXls<LinhaLeituraXls>
+            var config = new ConfigLeituraXls<DadoXls>
             {
-                CriarDadosLinha = () => new LinhaLeituraXls(),
+                CriarDadosLinha = () => new DadoXls(),
                 Colunas = ConfigColunas()
             };
 
@@ -58,35 +103,39 @@ namespace XlsImpExp
             var resultado = leitor.Ler(reader, config);
         }
 
-        private static IEnumerable<ConfigColunaXls<LinhaLeituraXls>> ConfigColunas()
+        private static IEnumerable<ConfigColunaXls<DadoXls>> ConfigColunas()
         {
             return new[]
             {
-                new ConfigColunaXls<LinhaLeituraXls>
+                new ConfigColunaXls<DadoXls>
                 {
                     Indice = 1,
                     Titulo = "Número",
                     PropExpr = p => p.Numero
                 },
-                new ConfigColunaXls<LinhaLeituraXls>
+                new ConfigColunaXls<DadoXls>
                 {
                     Indice = 2,
                     Titulo = "Data",
-                    PropExpr = p => p.Data
+                    PropExpr = p => p.Data,
+                    TipoDado = EnumTipoDadoXls.DataHora,
+                    Formato = EnumFormatoXls.DataHora
                 },
-                new ConfigColunaXls<LinhaLeituraXls>
+                new ConfigColunaXls<DadoXls>
                 {
                     Indice = 3,
                     Titulo = "Valor",
-                    PropExpr = p => p.Valor
+                    PropExpr = p => p.Valor,
+                    LerValor = p => p.Valor.HasValue ? decimal.Truncate(p.Valor.Value) : (decimal?)null
                 },
-                new ConfigColunaXls<LinhaLeituraXls>
+                new ConfigColunaXls<DadoXls>
                 {
                     Indice = 4,
                     Titulo = "Obs",
+                    Obrigatorio = false,
                     PropExpr = p => p.Obs
                 },
-                new ConfigColunaXls<LinhaLeituraXls>
+                new ConfigColunaXls<DadoXls>
                 {
                     Indice = 5,
                     Titulo = "Ativo",

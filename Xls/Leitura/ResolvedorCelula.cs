@@ -5,7 +5,7 @@ namespace Xls.Leitura
 {
     internal class ResolvedorCelula
     {
-        internal object ResolverValor(EnumTipoDadoXls tipoDado, bool obrigatorio, object valor)
+        public object ResolverValor(EnumTipoDadoXls tipoDado, bool obrigatorio, object valor)
         {
             if (valor == null && !obrigatorio)
                 return null;

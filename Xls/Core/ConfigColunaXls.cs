@@ -10,8 +10,9 @@ namespace Xls.Core
         public Expression<Func<T, object>> PropExpr { get; set; }
         // 
         public EnumTipoDadoXls? TipoDado { get; set; }
+        public EnumFormatoXls? Formato { get; set; }
         public bool? Obrigatorio { get; set; }
+        public Func<T, object> LerValor { get; set; }
         public Action<T, object> AplicarValor { get; set; }
-
     }
 }

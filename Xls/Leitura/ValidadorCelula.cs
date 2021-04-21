@@ -5,7 +5,7 @@ namespace Xls.Leitura
 {
     internal class ValidadorCelula
     {
-        internal bool ValidarValor(ICollection<MensagemLinhaLeituraXls> mensagens,
+        public bool ValidarValor(ICollection<MensagemLinhaLeituraXls> mensagens,
                                    string rotulo,
                                    EnumTipoDadoXls tipoDado,
                                    bool obrigatorio,
@@ -39,11 +39,11 @@ namespace Xls.Leitura
 
         private bool ValidarBool(ICollection<MensagemLinhaLeituraXls> mensagens, string rotulo, object valor)
         {
-            var str = ((valor as string) ?? string.Empty).ToLower();
+            var str = ((valor as string) ?? string.Empty).ToUpper();
 
-            if (str != "false" && str != "true")
+            if (str != "FALSE" && str != "TRUE")
             {
-                mensagens.Add(new MensagemLinhaLeituraXls($"Valor para '{rotulo}' precisa ser 'true' ou 'false'."));
+                mensagens.Add(new MensagemLinhaLeituraXls($"Valor para '{rotulo}' precisa ser 'TRUE' ou 'FALSE'."));
                 return false;
             }
             return true;

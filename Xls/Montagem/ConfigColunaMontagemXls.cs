@@ -3,29 +3,31 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Xls.Core;
 
-namespace Xls.Leitura
+namespace Xls.Montagem
 {
-    internal class ConfigColunaLeituraXls<T>
+    internal class ConfigColunaMontagemXls<T>
     {
         public int Indice { get; internal set; }
         public string Titulo { get; internal set; }
+        public EnumFormatoXls Formato { get; internal set; }
         public EnumTipoDadoXls TipoDado { get; internal set; }
         public bool Obrigatorio { get; internal set; }
-        public Action<T, object> AplicarValor { get; internal set; }
+        public Func<T, object> LerValor { get; internal set; }
 
-        public static IReadOnlyList<ConfigColunaLeituraXls<T>> Resolver(IResolvedorExprLeituraXls resolvedor, IEnumerable<ConfigColunaXls<T>> configColunas)
+        public static IReadOnlyList<ConfigColunaMontagemXls<T>> Resolver(IResolvedorExprMontagemXls resolvedor, IEnumerable<ConfigColunaXls<T>> configColunas)
         {
-            var configs = new List<ConfigColunaLeituraXls<T>>();
+            var configs = new List<ConfigColunaMontagemXls<T>>();
 
             foreach (var coluna in configColunas)
             {
-                var config = new ConfigColunaLeituraXls<T>
+                var config = new ConfigColunaMontagemXls<T>
                 {
                     Indice = coluna.Indice,
                     Titulo = coluna.Titulo,
                     TipoDado = coluna.TipoDado ?? EnumTipoDadoXls.Unknown,
+                    Formato = coluna.Formato ?? EnumFormatoXls.Texto,
                     Obrigatorio = coluna.Obrigatorio ?? false,
-                    AplicarValor = coluna.AplicarValor
+                    LerValor = coluna.LerValor
                 };
 
                 if (coluna.PropExpr != null)
@@ -36,11 +38,14 @@ namespace Xls.Leitura
                     if (!coluna.Obrigatorio.HasValue)
                         config.Obrigatorio = resolvedor.ResolverObrigatorio(coluna.PropExpr);
 
-                    if (config.AplicarValor == null)
-                        config.AplicarValor = resolvedor.CriarAplicadorValor(coluna.PropExpr);
+                    if (!coluna.Formato.HasValue)
+                        config.Formato = resolvedor.ResolverFormato(coluna.PropExpr);
+
+                    if (config.LerValor == null)
+                        config.LerValor = resolvedor.CriarLeitorValor(coluna.PropExpr);
                 }
 
-                Validar(config);
+                ValidarMapeador(config);
                 configs.Add(config);
             }
 
@@ -48,10 +53,10 @@ namespace Xls.Leitura
         }
 
         [Conditional("DEBUG")]
-        private static void Validar(ConfigColunaLeituraXls<T> config)
+        private static void ValidarMapeador(ConfigColunaMontagemXls<T> config)
         {
-            if (config.AplicarValor == null)
-                throw new Exception($"Não foi possível resolver '{nameof(config.AplicarValor)}' para coluna {config.Titulo}");
+            if (config.LerValor == null)
+                throw new Exception($"Não foi possível resolver '{nameof(config.LerValor)}' para coluna {config.Titulo}");
         }
     }
 }

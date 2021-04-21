@@ -4,9 +4,9 @@ using System.Reflection;
 
 namespace Xls.Core
 {
-    internal class ResolvedorExpr
+    internal class ResolvedorExpr : IResolvedorExprMontagemXls, IResolvedorExprLeituraXls
     {
-        internal EnumTipoDadoXls ResolverTipoDado<T>(Expression<Func<T, object>> propExpr)
+        public EnumTipoDadoXls ResolverTipoDado<T>(Expression<Func<T, object>> propExpr)
         {
             var prop = ResolverProp(propExpr.Body);
             var type = prop.PropertyType;
@@ -29,13 +29,30 @@ namespace Xls.Core
             return EnumTipoDadoXls.Unknown;
         }
 
-        internal bool ResolverObrigatorio<T>(Expression<Func<T, object>> propExpr)
+        public EnumFormatoXls ResolverFormato<T>(Expression<Func<T, object>> propExpr)
+        {
+            var prop = ResolverProp(propExpr.Body);
+            var type = prop.PropertyType;
+
+            if (type == typeof(int) || type == typeof(int?))
+                return EnumFormatoXls.Inteiro;
+
+            if (type == typeof(decimal) || type == typeof(decimal?))
+                return EnumFormatoXls.Decimal;
+
+            if (type == typeof(DateTime) || type == typeof(DateTime?))
+                return EnumFormatoXls.Data;
+
+            return EnumFormatoXls.Texto;
+        }
+
+        public bool ResolverObrigatorio<T>(Expression<Func<T, object>> propExpr)
         {
             var prop = ResolverProp(propExpr.Body);
             return !IsNullable(prop.PropertyType);
         }
 
-        internal Action<T, object> CriarAplicadorValor<T>(Expression<Func<T, object>> propExpr)
+        public Action<T, object> CriarAplicadorValor<T>(Expression<Func<T, object>> propExpr)
         {
             var prop = ResolverProp(propExpr.Body);
             var expression = ResolverMemberExpression(propExpr.Body);
@@ -48,6 +65,11 @@ namespace Xls.Core
             var lambda = Expression.Lambda<Action<T, object>>(body, new[] { objectParam, valueParam });
 
             return lambda.Compile();
+        }
+
+        public Func<T, object> CriarLeitorValor<T>(Expression<Func<T, object>> propExpr)
+        {
+            return propExpr.Compile();
         }
 
         private Expression AplicarLambdaParam(ParameterExpression param, Expression expression, MemberInfo member)
